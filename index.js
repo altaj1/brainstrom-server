@@ -63,13 +63,77 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
-    // Connect the client to the server	(optional starting in v4.7)
-    // await client.connect();
+    const db = client.db('brainstrom')
+    const usersCollection = db.collection('users')
+
+    // auth related api
+    app.post('/jwt', async (req, res) => {
+        const user = req.body
+        const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
+          expiresIn: '365d',
+        })
+        res
+          .cookie('token', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
+          })
+          .send({ success: true })
+      })
+
+      app.get('/logout', async (req, res) => {
+        try {
+          res
+            .clearCookie('token', {
+              maxAge: 0,
+              secure: process.env.NODE_ENV === 'production',
+              sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
+            })
+            .send({ success: true })
+          console.log('Logout successful')
+        } catch (err) {
+          res.status(500).send(err)
+        }
+      })
 
 
+       // save a user data in db
+    app.put('/user', async (req, res) => {
+        const user = req.body
+  
+        const query = { email: user?.email }
+        // check if user already exists in db
+        const isExist = await usersCollection.findOne(query)
+        if (isExist) {
+          if (user.status === 'Requested') {
+            // if existing user try to change his role
+            const result = await usersCollection.updateOne(query, {
+              $set: { status: user?.status },
+            })
+            return res.send(result)
+          } else {
+            // if existing user login again
+            return res.send(isExist)
+          }
+        }
+  
+        // save user for the first time
+        const options = { upsert: true }
+        const updateDoc = {
+          $set: {
+            ...user,
+            timestamp: Date.now(),
+          },
+        }
+        const result = await usersCollection.updateOne(query, updateDoc, options)
+        // welcome new user
+        // sendEmail(user?.email, {
+        //   subject: 'Welcome to Brainstrom!',
+        //   message: `Hope you will find you destination`,
+        // })
+        res.send(result)
+      })
 
-
-    // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
