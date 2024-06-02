@@ -110,6 +110,12 @@ async function run() {
       }
     )
 
+       // get all users data from db
+       app.get('/users', verifyToken,  async (req, res) => {
+        const result = await usersCollection.find().toArray()
+        res.send(result)
+      })
+
        // save a user data in db
     app.put('/user', async (req, res) => {
         const user = req.body
