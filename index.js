@@ -67,6 +67,32 @@ async function run() {
     const usersCollection = db.collection('users')
     const contestsCollection = db.collection('contests')
 
+        // verify admin middleware
+    const verifyAdmin = async (req, res, next) => {
+      console.log('hello')
+      const user = req.user
+      const query = { email: user?.email }
+      const result = await usersCollection.findOne(query)
+      console.log(result?.role)
+      if (!result || result?.role !== 'Admin')
+        return res.status(401).send({ message: 'unauthorized access!!' })
+
+      next()
+    }
+       
+        // verify Contest Creato middleware
+        const verifyContestCreator = async (req, res, next) => {
+        
+          const user = req.user
+          const query = { email: user?.email }
+          const result = await usersCollection.findOne(query)
+          console.log(result?.role)
+          if (!result || result?.role !== ' Contest Creato') {
+            return res.status(401).send({ message: 'unauthorized access!!' })
+          }
+    
+          next()
+        }
     // auth related api
     app.post('/jwt', async (req, res) => {
         const user = req.body
@@ -99,8 +125,7 @@ async function run() {
 
        // get all Contest for Creator Contest
     app.get(
-      '/MyCreatedContest/:email',
-      verifyToken,     
+      '/MyCreatedContest/:email', verifyToken, verifyContestCreator,    
       async (req, res) => {
         const email = req.params.email
 
@@ -111,7 +136,7 @@ async function run() {
     )
 
        // get all users data from db
-       app.get('/users', verifyToken,  async (req, res) => {
+       app.get('/users', verifyToken, verifyAdmin,  async (req, res) => {
         const result = await usersCollection.find().toArray()
         res.send(result)
       })
@@ -121,7 +146,7 @@ async function run() {
         const result = await usersCollection.findOne({email})
         res.send(result)
       })
-       app.get('/contests', verifyToken,  async (req, res) => {
+       app.get('/contests', verifyToken, verifyAdmin,  async (req, res) => {
         const email = req.params.email;
         
         const result = await contestsCollection.find().toArray()
@@ -129,7 +154,7 @@ async function run() {
       })
 
       //update a user role
-    app.put('/users/update/:email', async (req, res) => {
+    app.put('/users/update/:email', verifyToken, verifyAdmin, async (req, res) => {
       const email = req.params.email
       const data = req.body
       const query = { email }
@@ -143,7 +168,7 @@ async function run() {
     })
 
        // save a user data in db
-    app.put('/user', async (req, res) => {
+    app.put('/user', verifyToken, async (req, res) => {
         const user = req.body
   
         const query = { email: user?.email }
@@ -182,14 +207,14 @@ async function run() {
 
 
            // Save a contest data in db
-    app.post('/contest', verifyToken, async (req, res) => {
+    app.post('/contest', verifyToken, verifyContestCreator, async (req, res) => {
       const contestData = req.body
       const result = await contestsCollection.insertOne(contestData)
       res.send(result)
     })
 
       // delete a User
-      app.delete('/delete/user/:id', verifyToken, async (req, res) => {
+      app.delete('/delete/user/:id', verifyToken, verifyAdmin, async (req, res) => {
         const id = req.params.id
         const query = { _id: new ObjectId(id) }
         const result = await usersCollection.deleteOne(query)
