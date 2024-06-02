@@ -115,6 +115,18 @@ async function run() {
         const result = await usersCollection.find().toArray()
         res.send(result)
       })
+       app.get('/user/:email', verifyToken,  async (req, res) => {
+        const email = req.params.email;
+        
+        const result = await usersCollection.findOne({email})
+        res.send(result)
+      })
+       app.get('/contests', verifyToken,  async (req, res) => {
+        const email = req.params.email;
+        
+        const result = await contestsCollection.find().toArray()
+        res.send(result)
+      })
 
       //update a user role
     app.put('/users/update/:email', async (req, res) => {
