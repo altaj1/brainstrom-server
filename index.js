@@ -97,6 +97,18 @@ async function run() {
         }
       })
 
+       // get all Contest for Creator Contest
+    app.get(
+      '/MyCreatedContest/:email',
+      verifyToken,     
+      async (req, res) => {
+        const email = req.params.email
+
+        let query = { 'contentCreator.email': email }
+        const result = await contestsCollection.find(query).toArray()
+        res.send(result)
+      }
+    )
 
        // save a user data in db
     app.put('/user', async (req, res) => {
