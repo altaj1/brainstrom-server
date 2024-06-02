@@ -65,6 +65,7 @@ async function run() {
   try {
     const db = client.db('brainstrom')
     const usersCollection = db.collection('users')
+    const contestsCollection = db.collection('contests')
 
     // auth related api
     app.post('/jwt', async (req, res) => {
@@ -116,7 +117,6 @@ async function run() {
             return res.send(isExist)
           }
         }
-  
         // save user for the first time
         const options = { upsert: true }
         const updateDoc = {
@@ -134,6 +134,16 @@ async function run() {
         res.send(result)
       })
 
+
+
+
+           // Save a contest data in db
+    app.post('/contest', verifyToken, async (req, res) => {
+      const contestData = req.body
+      const result = await contestsCollection.insertOne(contestData)
+      res.send(result)
+    })
+
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
@@ -147,5 +157,5 @@ app.get('/', (req, res) => {
   })
   
 app.listen(port, () => {
-    console.log(`StayVista is running on port ${port}`)
+    console.log(`Brainstrom is running on port ${port}`)
   })
