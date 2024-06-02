@@ -116,6 +116,20 @@ async function run() {
         res.send(result)
       })
 
+      //update a user role
+    app.put('/users/update/:email', async (req, res) => {
+      const email = req.params.email
+      const data = req.body
+      const query = { email }
+      console.log(data)
+      const updateDoc = {
+        $set: { ...data, timestamp: Date.now() },
+      }
+      const result = await usersCollection.updateOne(query, updateDoc)
+      res.send(result)
+      console.log(result)
+    })
+
        // save a user data in db
     app.put('/user', async (req, res) => {
         const user = req.body
@@ -161,6 +175,14 @@ async function run() {
       const result = await contestsCollection.insertOne(contestData)
       res.send(result)
     })
+
+      // delete a User
+      app.delete('/delete/user/:id', verifyToken, async (req, res) => {
+        const id = req.params.id
+        const query = { _id: new ObjectId(id) }
+        const result = await usersCollection.deleteOne(query)
+        res.send(result)
+      })
 
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
