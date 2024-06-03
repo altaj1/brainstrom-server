@@ -87,9 +87,9 @@ async function run() {
           const query = { email: user?.email }
           const result = await usersCollection.findOne(query)
           console.log(result?.role)
-          // if (!result || result?.role !== 'ContestCreato') {
-          //   return res.status(401).send({ message: 'unauthorized access!!' })
-          // }
+          if (!result || result?.role !== 'ContestCreator') {
+            return res.status(401).send({ message: 'unauthorized access!!' })
+          }
     
           next()
         }
@@ -226,6 +226,19 @@ async function run() {
         res.send(result)
         // console.log(result)
       })
+      // update Contest creator
+      app.put('/update-contest/creator/:id', verifyToken, verifyContestCreator, async (req, res) => {
+        const id = req.params.id
+        const data = req.body
+        const query = { _id: new ObjectId(id) }
+        // console.log(data)
+        const updateDoc = {
+          $set: { ...data},
+        }
+        const result = await contestsCollection.updateOne(query, updateDoc)
+        res.send(result)
+        console.log(result)
+      })
 
            // Save a contest data in db
     app.post('/contest', verifyToken, verifyContestCreator, async (req, res) => {
@@ -241,7 +254,15 @@ async function run() {
         const result = await usersCollection.deleteOne(query)
         res.send(result)
       })
+      // delete contest by admin
       app.delete('/delete/contest/:id', verifyToken, verifyAdmin, async (req, res) => {
+        const id = req.params.id
+        const query = { _id: new ObjectId(id) }
+        const result = await contestsCollection.deleteOne(query)
+        res.send(result)
+      })
+      // delete contest creator
+      app.delete('/delete-creator-contest/:id', verifyToken, verifyContestCreator, async (req, res) => {
         const id = req.params.id
         const query = { _id: new ObjectId(id) }
         const result = await contestsCollection.deleteOne(query)
