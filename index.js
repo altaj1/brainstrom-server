@@ -168,7 +168,7 @@ async function run() {
     })
 
        // save a user data in db
-    app.put('/user', verifyToken, async (req, res) => {
+    app.put('/user',  async (req, res) => {
         const user = req.body
   
         const query = { email: user?.email }
@@ -203,8 +203,19 @@ async function run() {
         res.send(result)
       })
 
-
-
+      // update contest 
+      app.put('/contest/update/:id', verifyToken, verifyAdmin, async (req, res) => {
+        const id = req.params.id
+        const data = req.body
+        const query = { _id: new ObjectId(id) }
+        console.log(data)
+        const updateDoc = {
+          $set: { ...data, timestamp: Date.now() },
+        }
+        const result = await contestsCollection.updateOne(query, updateDoc)
+        res.send(result)
+        console.log(result)
+      })
 
            // Save a contest data in db
     app.post('/contest', verifyToken, verifyContestCreator, async (req, res) => {
