@@ -34,7 +34,7 @@ const corsOptions = {
 // Verify Token Middleware
 const verifyToken = async (req, res, next) => {
     const token = req.cookies?.token
-    console.log(token)
+    // console.log(token)
     if (!token) {
       return res.status(401).send({ message: 'unauthorized access' })
     }
@@ -69,11 +69,11 @@ async function run() {
 
         // verify admin middleware
     const verifyAdmin = async (req, res, next) => {
-      console.log('hello')
+      // console.log('hello')
       const user = req.user
       const query = { email: user?.email }
       const result = await usersCollection.findOne(query)
-      console.log(result?.role)
+      // console.log(result?.role)
       if (!result || result?.role !== 'Admin')
         return res.status(401).send({ message: 'unauthorized access!!' })
 
@@ -87,9 +87,9 @@ async function run() {
           const query = { email: user?.email }
           const result = await usersCollection.findOne(query)
           console.log(result?.role)
-          if (!result || result?.role !== ' Contest Creato') {
-            return res.status(401).send({ message: 'unauthorized access!!' })
-          }
+          // if (!result || result?.role !== 'ContestCreato') {
+          //   return res.status(401).send({ message: 'unauthorized access!!' })
+          // }
     
           next()
         }
@@ -125,7 +125,7 @@ async function run() {
 
        // get all Contest for Creator Contest
     app.get(
-      '/MyCreatedContest/:email', verifyToken, verifyContestCreator,    
+      '/MyCreatedContest/:email', verifyToken,   verifyContestCreator ,  
       async (req, res) => {
         const email = req.params.email
 
@@ -159,7 +159,7 @@ async function run() {
           category:{$regex:String(search), $options: 'i'},
         }
         const result = await contestsCollection.find(query).toArray()
-        console.log(result ,"onley confrome contesr")
+        // console.log(result ,"onley confrome contesr")
         res.send(result)
       })
 
@@ -168,13 +168,13 @@ async function run() {
       const email = req.params.email
       const data = req.body
       const query = { email }
-      console.log(data)
+      // console.log(data)
       const updateDoc = {
         $set: { ...data, timestamp: Date.now() },
       }
       const result = await usersCollection.updateOne(query, updateDoc)
       res.send(result)
-      console.log(result)
+      // console.log(result)
     })
 
        // save a user data in db
@@ -218,13 +218,13 @@ async function run() {
         const id = req.params.id
         const data = req.body
         const query = { _id: new ObjectId(id) }
-        console.log(data)
+        // console.log(data)
         const updateDoc = {
           $set: { ...data, timestamp: Date.now() },
         }
         const result = await contestsCollection.updateOne(query, updateDoc)
         res.send(result)
-        console.log(result)
+        // console.log(result)
       })
 
            // Save a contest data in db
