@@ -146,10 +146,20 @@ async function run() {
         const result = await usersCollection.findOne({email})
         res.send(result)
       })
-       app.get('/contests', verifyToken, verifyAdmin,  async (req, res) => {
-        const email = req.params.email;
-        
+      // get all contest  data from db for admin
+       app.get('/all-contests', verifyToken, verifyAdmin,  async (req, res) => {         
         const result = await contestsCollection.find().toArray()
+        res.send(result)
+      })
+      // get contest of user
+      app.get('/contest', async( req, res)=>{
+        const search = req.query.search;
+        const query = {
+          status:'Confirm',
+          category:{$regex:String(search), $options: 'i'},
+        }
+        const result = await contestsCollection.find(query).toArray()
+        console.log(result ,"onley confrome contesr")
         res.send(result)
       })
 
