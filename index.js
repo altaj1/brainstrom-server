@@ -7,7 +7,7 @@ const cookieParser = require('cookie-parser')
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb')
 const jwt = require('jsonwebtoken')
 const port = process.env.PORT || 8000
-
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY)
 const corsOptions = {
     origin: ['http://localhost:5173', 'http://localhost:5174'],
     credentials: true,
@@ -66,6 +66,8 @@ async function run() {
     const db = client.db('brainstrom')
     const usersCollection = db.collection('users')
     const contestsCollection = db.collection('contests')
+    const registerCollection = db.collection('register')
+    const submitCollection = db.collection('submit')
 
         // verify admin middleware
     const verifyAdmin = async (req, res, next) => {
@@ -233,6 +235,35 @@ async function run() {
         res.send(result)
         // console.log(result)
       })
+      // submit pages id by user
+      app.put('/submitpage', verifyToken,  async (req, res) => {
+        const id = req.query.id
+        const email = req.query.email
+        const data = req.body
+        const query = { contest_id: id  }
+        // console.log(data)
+        // console.log(id, email)
+        const queryEmail = {'participant_info.email': email}
+
+        const isExistId = await submitCollection.findOne(query)
+        const isExistEmail = await submitCollection.findOne(queryEmail)
+        console.log(isExistId,"thsi is is exist id")
+        console.log(isExistEmail,"thsi is is exist email")
+        if (isExistEmail && isExistId) {
+          console.log("this moto return hoiche")
+          const result = await submitCollection.updateOne(query, {
+            $set:{contest_paper: data.contest_paper}
+          })
+          res.send(result)
+          return
+          
+        }
+        const options = { upsert: true }
+        const updateDoc = { ...data, submitTime: Date.now() }
+        // const result = await submitCollection.insertOne( updateDoc, options)
+        // res.send(result)
+        // console.log(result)
+      })
       // update Contest creator
       app.put('/update-contest/creator/:id', verifyToken, verifyContestCreator, async (req, res) => {
         const id = req.params.id
@@ -253,6 +284,33 @@ async function run() {
       const result = await contestsCollection.insertOne(contestData)
       res.send(result)
     })
+
+      // create-payment-intent
+      app.post('/create-payment-intent', verifyToken, async (req, res) => {
+        const price = req.body.price
+        const priceInCent = parseFloat(price) * 100
+        if (!price || priceInCent < 1 && priceInCent < 10000) {
+          res.send({moreAmount:"Amount must be no more than 1000"})
+          return}
+        // generate clientSecret
+        const { client_secret } = await stripe.paymentIntents.create({
+          amount: priceInCent,
+          currency: 'usd',
+          // In the latest version of the API, specifying the `automatic_payment_methods` parameter is optional because Stripe enables its functionality by default.
+          automatic_payment_methods: {
+            enabled: true,
+          },
+        })
+        // send client secret as response
+        res.send({ clientSecret: client_secret })
+      })
+
+      // save a registion data in db
+      app.post('/register', async(req, res)=>{
+        const data = req.body
+        const result = await registerCollection.insertOne(data);
+        res.send(result)
+      })
 
       // delete a User
       app.delete('/delete/user/:id', verifyToken, verifyAdmin, async (req, res) => {
