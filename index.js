@@ -162,6 +162,13 @@ async function run() {
         // console.log(result ,"onley confrome contesr")
         res.send(result)
       })
+      app.get('/detail/contest/:id', async( req, res)=>{
+        const id = req.params.id
+        const query = {_id: new ObjectId(id)};
+        const result = await contestsCollection.findOne(query)
+        // console.log(result ,"onley confrome contesr")
+        res.send(result)
+      })
 
       //update a user role
     app.put('/users/update/:email', verifyToken, verifyAdmin, async (req, res) => {
