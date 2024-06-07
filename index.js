@@ -171,6 +171,16 @@ async function run() {
         // console.log(result ,"onley confrome contesr")
         res.send(result)
       })
+      // get payment contest data
+      app.get('/payment-contest/:email', async (req, res)=>{
+        const email = req.params.email;
+        const query = {
+          'participate.email': email
+        }
+        console.log(query)
+        const result = await registerCollection.find(query).toArray()
+        res.send(result);
+      })
 
       //update a user role
     app.put('/users/update/:email', verifyToken, verifyAdmin, async (req, res) => {
