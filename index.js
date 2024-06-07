@@ -153,7 +153,7 @@ async function run() {
         const result = await contestsCollection.find().toArray()
         res.send(result)
       })
-      // get contest of user
+      // get all contest of user
       app.get('/contest', async( req, res)=>{
         const search = req.query.search;
         const query = {
@@ -164,18 +164,28 @@ async function run() {
         // console.log(result ,"onley confrome contesr")
         res.send(result)
       })
-      app.get('/detail/contest/:id', async( req, res)=>{
+      app.get('/detail/contest/:id', verifyToken, async( req, res)=>{
         const id = req.params.id
         const query = {_id: new ObjectId(id)};
         const result = await contestsCollection.findOne(query)
         // console.log(result ,"onley confrome contesr")
         res.send(result)
       })
-      // get payment contest data
-      app.get('/payment-contest/:email', async (req, res)=>{
+      // get payment contest data for user
+      app.get('/payment-contest/:email', verifyToken, async (req, res)=>{
         const email = req.params.email;
         const query = {
           'participate.email': email
+        }
+        console.log(query)
+        const result = await registerCollection.find(query).toArray()
+        res.send(result);
+      })
+      // get all participant Contests  data for creator
+      app.get('/participantContests/:email', verifyToken, verifyContestCreator, async (req, res)=>{
+        const email = req.params.email;
+        const query = {
+          'contentCreator.email': email
         }
         console.log(query)
         const result = await registerCollection.find(query).toArray()
