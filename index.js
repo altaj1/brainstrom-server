@@ -238,10 +238,11 @@ async function run() {
         const data = req.body
         const query = { _id: new ObjectId(id) }
         // console.log(data)
+        const option = {upsert:true}
         const updateDoc = {
           $set: { ...data, timestamp: Date.now() },
         }
-        const result = await contestsCollection.updateOne(query, updateDoc)
+        const result = await contestsCollection.updateOne(query, updateDoc, option)
         res.send(result)
         // console.log(result)
       })
@@ -257,10 +258,10 @@ async function run() {
 
         const isExistId = await submitCollection.findOne(query)
         const isExistEmail = await submitCollection.findOne(queryEmail)
-        console.log(isExistId,"thsi is is exist id")
-        console.log(isExistEmail,"thsi is is exist email")
+        // console.log(isExistId,"thsi is is exist id")
+        // console.log(isExistEmail,"thsi is is exist email")
         if (isExistEmail && isExistId) {
-          console.log("this moto return hoiche")
+          // console.log("this moto return hoiche")
           const result = await submitCollection.updateOne(query, {
             $set:{contest_paper: data.contest_paper}
           })
@@ -270,8 +271,8 @@ async function run() {
         }
         const options = { upsert: true }
         const updateDoc = { ...data, submitTime: Date.now() }
-        // const result = await submitCollection.insertOne( updateDoc, options)
-        // res.send(result)
+        const result = await submitCollection.insertOne( updateDoc, options)
+        res.send(result)
         // console.log(result)
       })
       // update Contest creator
