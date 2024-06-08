@@ -296,7 +296,27 @@ async function run() {
         }
         const result = await contestsCollection.updateOne(query, updateDoc)
         res.send(result)
-        console.log(result)
+        // console.log(result)
+      })
+
+      // save a registion data in db
+      app.put('/register', async(req, res)=>{
+        const data = req.body
+        const email = req.query.email
+        const id = req.query.contestId
+        // console.log(email, contestId)
+        const query = { contestId: id  }
+       
+        const queryEmail = {'participate.email': email}
+        const isExistId = await registerCollection.findOne(query)
+        const isExistEmail = await registerCollection.findOne(queryEmail)
+        if (isExistEmail && isExistId) {
+          console.log("ei user already payment korche")
+          return
+        }
+        const result = await registerCollection.insertOne(data);
+        res.send(result)
+        console.log(result, "register result")
       })
 
            // Save a contest data in db
@@ -326,12 +346,7 @@ async function run() {
         res.send({ clientSecret: client_secret })
       })
 
-      // save a registion data in db
-      app.post('/register', async(req, res)=>{
-        const data = req.body
-        const result = await registerCollection.insertOne(data);
-        res.send(result)
-      })
+      
 
       // delete a User
       app.delete('/delete/user/:id', verifyToken, verifyAdmin, async (req, res) => {
