@@ -191,6 +191,16 @@ async function run() {
         const result = await registerCollection.find(query).toArray()
         res.send(result);
       })
+      // get my Winning contest
+      app.get('/my-Winning-Contest/:email', verifyToken, async (req, res)=>{
+        const email = req.params.email;
+        const query = {
+          'winerData.winerEmal': email
+        }
+        // console.log(query)
+        const result = await registerCollection.find(query).toArray()
+        res.send(result);
+      })
       //  get /DeclareContest data
       app.get('/declareContest', verifyToken, verifyContestCreator, async(req, res)=>{
         const email = req.query.email;
@@ -334,6 +344,21 @@ async function run() {
         res.send(result)
         // console.log(result, "register result")
       })
+      //  decler winner of the contest register colection
+      app.put('/update-contest-register/creator/:id', verifyToken, verifyContestCreator, async (req, res) => {
+        const id = req.params.id
+        const data = req.body
+        const query = { 
+          contestId: id}
+        // console.log(data)
+        const updateDoc = {
+          $set: { ...data},
+        }
+        const result = await registerCollection.updateMany(query, updateDoc)
+        res.send(result)
+        // console.log(result)
+      })
+
 
            // Save a contest data in db
     app.post('/contest', verifyToken, verifyContestCreator, async (req, res) => {
