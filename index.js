@@ -187,7 +187,7 @@ async function run() {
         const query = {
           'contentCreator.email': email
         }
-        console.log(query)
+        // console.log(query)
         const result = await registerCollection.find(query).toArray()
         res.send(result);
       })
@@ -195,7 +195,17 @@ async function run() {
       app.get('/declareContest', verifyToken, verifyContestCreator, async(req, res)=>{
         const email = req.query.email;
         const contestID = req.query.contestID
-        console.log(email, contestID, "/DeclareContest")
+        // console.log(email, contestID, "/DeclareContest")
+        const query = {
+          
+          contestId:contestID
+        }
+        const submitResult = await submitCollection.find({
+          contest_id:contestID}).toArray();
+        const registerResult = await registerCollection.find(query).toArray()
+        // console.log(submitResult)
+        res.send({submitResult, registerResult})
+
       })
       //update a user role
     app.put('/users/update/:email', verifyToken, verifyAdmin, async (req, res) => {
@@ -266,16 +276,14 @@ async function run() {
         const id = req.query.id
         const email = req.query.email
         const data = req.body
-        const query = { contest_id: id  }
+        const query = { contest_id: id,
+          'participant_info.email': email
+         }
         // console.log(data)
         // console.log(id, email)
-        const queryEmail = {'participant_info.email': email}
-
-        const isExistId = await submitCollection.findOne(query)
-        const isExistEmail = await submitCollection.findOne(queryEmail)
-        // console.log(isExistId,"thsi is is exist id")
-        // console.log(isExistEmail,"thsi is is exist email")
-        if (isExistEmail && isExistId) {
+        const isExist = await submitCollection.findOne(query)
+       
+        if (isExist) {
           // console.log("this moto return hoiche")
           const result = await submitCollection.updateOne(query, {
             $set:{contest_paper: data.contest_paper}
@@ -310,12 +318,15 @@ async function run() {
         const email = req.query.email
         const id = req.query.contestId
         // console.log(email, contestId)
-        const query = { contestId: id  }
+        const query = { contestId: id,
+          'participate.email': email
+          }
        
         const queryEmail = {'participate.email': email}
-        const isExistId = await registerCollection.findOne(query)
-        const isExistEmail = await registerCollection.findOne(queryEmail)
-        if (isExistEmail && isExistId) {
+        const isExist= await registerCollection.findOne(query)
+        // const isExistEmail = await registerCollection.findOne(queryEmail)
+
+        if (isExist ) {
           console.log("ei user already payment korche")
           return
         }
