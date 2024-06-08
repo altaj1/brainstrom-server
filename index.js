@@ -191,7 +191,12 @@ async function run() {
         const result = await registerCollection.find(query).toArray()
         res.send(result);
       })
-
+      //  get /DeclareContest data
+      app.get('/declareContest', verifyToken, verifyContestCreator, async(req, res)=>{
+        const email = req.query.email;
+        const contestID = req.query.contestID
+        console.log(email, contestID, "/DeclareContest")
+      })
       //update a user role
     app.put('/users/update/:email', verifyToken, verifyAdmin, async (req, res) => {
       const email = req.params.email
@@ -300,7 +305,7 @@ async function run() {
       })
 
       // save a registion data in db
-      app.put('/register', async(req, res)=>{
+      app.put('/register', verifyToken, async(req, res)=>{
         const data = req.body
         const email = req.query.email
         const id = req.query.contestId
@@ -316,7 +321,7 @@ async function run() {
         }
         const result = await registerCollection.insertOne(data);
         res.send(result)
-        console.log(result, "register result")
+        // console.log(result, "register result")
       })
 
            // Save a contest data in db
