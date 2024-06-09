@@ -201,6 +201,20 @@ async function run() {
         const result = await registerCollection.find(query).toArray()
         res.send(result);
       })
+
+      // get user user-stat
+      app.get('/user-stat/:email', verifyToken, async (req, res)=>{
+        const email = req.params.email;
+      
+        // console.log(query)
+        const winningResult = await registerCollection.find({
+          'winerData.winerEmal': email
+        }).toArray()
+        const participateResult = await registerCollection.find({
+          'participate.email': email
+        }).toArray()
+        res.send({winningResult, participateResult});
+      })
       //  get /DeclareContest data
       app.get('/declareContest', verifyToken, verifyContestCreator, async(req, res)=>{
         const email = req.query.email;
@@ -218,7 +232,7 @@ async function run() {
 
       })
       //update a user role
-    app.put('/users/update/:email', verifyToken, verifyAdmin, async (req, res) => {
+    app.put('/users/update/:email', verifyToken, async (req, res) => {
       const email = req.params.email
       const data = req.body
       const query = { email }
