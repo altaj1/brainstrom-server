@@ -153,15 +153,21 @@ async function run() {
         const result = await contestsCollection.find().toArray()
         res.send(result)
       })
-      // get all contest of user
+      // get  contest of user by search
       app.get('/contest', async( req, res)=>{
         const search = req.query.search;
         const query = {
           status:'Confirm',
           category:{$regex:String(search), $options: 'i'},
         }
-        const result = await contestsCollection.find(query).toArray()
+        const result = await contestsCollection.find(query).sort({ 
+          participationCount: -1 }).toArray()
         // console.log(result ,"onley confrome contesr")
+        res.send(result)
+      })
+      // get all contests
+      app.get('/all-contests/user', async (req, res)=>{
+        const result = await contestsCollection.find().toArray();
         res.send(result)
       })
       app.get('/detail/contest/:id', verifyToken, async( req, res)=>{
@@ -178,7 +184,7 @@ async function run() {
           'participate.email': email
         }
         console.log(query)
-        const result = await registerCollection.find(query).toArray()
+        const result = await registerCollection.find(query).sort({ to: 1 }).toArray()
         res.send(result);
       })
       // get all participant Contests  data for creator
@@ -230,6 +236,27 @@ async function run() {
         // console.log(submitResult)
         res.send({submitResult, registerResult})
 
+      })
+      // get OURE latest winner
+      app.get('/latest-winner', async (req, res)=>{
+        const result = await registerCollection.find()
+            .sort({ 'winerData.winDate': -1 })
+            .limit(1)
+            .toArray();
+
+        console.log(result, "this is latest winner");
+        
+        if (result.length > 0) {
+            res.send(result[0]);
+        } else {
+            res.status(404).send({ message: 'No winners found' });
+        }
+      })
+
+      // get data for leader bord
+      app.get('/leaderboard', verifyToken, async (req, res) => {
+        const result = await registerCollection.find().toArray()
+        res.send(result);
       })
       //update a user role
     app.put('/users/update/:email', verifyToken, async (req, res) => {
@@ -310,12 +337,19 @@ async function run() {
         if (isExist) {
           // console.log("this moto return hoiche")
           const result = await submitCollection.updateOne(query, {
-            $set:{contest_paper: data.contest_paper}
+            $set:{submit: data.contest_paper}
           })
           res.send(result)
           return
           
         }
+        const querySubmitPaper = { 
+          contestId: id,
+          'participate.email': email
+         }
+         const updateSubmitStatus = await registerCollection.updateOne(querySubmitPaper,{
+          $set:{submitStatus:true}
+        })
         const options = { upsert: true }
         const updateDoc = { ...data, submitTime: Date.now() }
         const result = await submitCollection.insertOne( updateDoc, options)
@@ -335,6 +369,19 @@ async function run() {
         res.send(result)
         // console.log(result)
       })
+      //  update participation count
+      app.put('/update-participation/:id', verifyToken, async (req, res) => {
+        const id = req.params.id
+        const data = req.body
+        const query = { _id: new ObjectId(id) }
+        console.log(data, id)
+        const updateDoc = {
+          $set: { ...data},
+        }
+        const result = await contestsCollection.updateOne(query, updateDoc)
+        res.send(result)
+        console.log(result)
+      })
 
       // save a registion data in db
       app.put('/register', verifyToken, async(req, res)=>{
@@ -351,6 +398,7 @@ async function run() {
         // const isExistEmail = await registerCollection.findOne(queryEmail)
 
         if (isExist ) {
+          res.send({status: true, })
           console.log("ei user already payment korche")
           return
         }
@@ -425,7 +473,7 @@ async function run() {
         res.send(result)
       })
 
-    await client.db("admin").command({ ping: 1 });
+    // await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
     // Ensures that the client will close when you finish/error
