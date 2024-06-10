@@ -12,41 +12,36 @@ const corsOptions = {
     origin: [
       'http://localhost:5173', 
       'http://localhost:5174',
-      'https://brainstrom-d72ae.web.app'
+      'https://brainstrom-d72ae.web.app',
+      "brainstrom-d72ae.firebaseapp.com"
 
     ],
     credentials: true,
     optionSuccessStatus: 200,
   }
-  app.use(cors(corsOptions))
-  
+  const cookieOptions = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+  };
+
+  app.use(cors(corsOptions)) 
   app.use(express.json())
   app.use(cookieParser())
 
-  const sendEmail = (emailAddress, emailData) => {
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      host: 'smtp.gmail.com',
-      port: 587,
-      secure: false, // Use `true` for port 465, `false` for all other ports
-      auth: {
-        // user: process.env.TRANSPORTER_EMAIL,
-        // pass: process.env.TRANSPORTER_PASS,
-      },
-    })
-};
+ 
 
 // Verify Token Middleware
 const verifyToken = async (req, res, next) => {
     const token = req.cookies?.token
     // console.log(token)
     if (!token) {
-      return res.status(401).send({ message: 'unauthorized access' })
+      return res.status(401).send({ message: 'unauthorized access 39', })
     }
     jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
       if (err) {
         console.log(err)
-        return res.status(401).send({ message: 'unauthorized access' })
+        return res.status(401).send({ message: 'unauthorized access 44' })
       }
       req.user = decoded
       next()
@@ -102,34 +97,27 @@ async function run() {
           next()
         }
     // auth related api
-    app.post('/jwt', async (req, res) => {
-        const user = req.body
-        const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
-          expiresIn: '365d',
-        })
-        res
-          .cookie('token', token, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
-          })
-          .send({ success: true })
+   // jwt generate
+   app.post('/jwt', async (req, res) => {
+    const email = req.body
+    const token = jwt.sign(email, process.env.ACCESS_TOKEN_SECRET, {
+      expiresIn: '365d',
+    })
+    res
+      .cookie('token', token,  {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
       })
+      .send({ success: true })
+  })
 
-      app.get('/logout', async (req, res) => {
-        try {
-          res
-            .clearCookie('token', {
-              maxAge: 0,
-              secure: process.env.NODE_ENV === 'production',
-              sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
-            })
-            .send({ success: true })
-          console.log('Logout successful')
-        } catch (err) {
-          res.status(500).send(err)
-        }
-      })
+        // clere cookis
+    app.post('/logout', async (req, res) => {
+      const user = req.body;
+      console.log('logging out', user);
+      res.clearCookie('token', {...cookieOptions,  maxAge: 0 }).send({ success: true })
+  })
 
        // get all Contest for Creator Contest
     app.get(
@@ -190,7 +178,7 @@ app.get('/best-creators',   async (req, res) => {
         .limit(size)
         .toArray();
         res.send(result)
-        console.log(result)
+        // console.log(result)
       })
       app.get('/detail/contest/:id', verifyToken, async( req, res)=>{
         const id = req.params.id
@@ -205,7 +193,7 @@ app.get('/best-creators',   async (req, res) => {
         const query = {
           'participate.email': email
         }
-        console.log(query)
+        // console.log(query)
         const result = await registerCollection.find(query).sort({ to: 1 }).toArray()
         res.send(result);
       })
@@ -322,11 +310,7 @@ app.get('/best-creators',   async (req, res) => {
           },
         }
         const result = await usersCollection.updateOne(query, updateDoc, options)
-        // welcome new user
-        // sendEmail(user?.email, {
-        //   subject: 'Welcome to Brainstrom!',
-        //   message: `Hope you will find you destination`,
-        // })
+        
         res.send(result)
       })
 
@@ -396,13 +380,13 @@ app.get('/best-creators',   async (req, res) => {
         const id = req.params.id
         const data = req.body
         const query = { _id: new ObjectId(id) }
-        console.log(data, id)
+        // console.log(data, id)
         const updateDoc = {
           $set: { ...data},
         }
         const result = await contestsCollection.updateOne(query, updateDoc)
         res.send(result)
-        console.log(result)
+        // console.log(result)
       })
 
       // save a registion data in db
