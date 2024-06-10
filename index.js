@@ -9,7 +9,12 @@ const jwt = require('jsonwebtoken')
 const port = process.env.PORT || 8000
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY)
 const corsOptions = {
-    origin: ['http://localhost:5173', 'http://localhost:5174'],
+    origin: [
+      'http://localhost:5173', 
+      'http://localhost:5174',
+      'https://brainstrom-d72ae.web.app'
+
+    ],
     credentials: true,
     optionSuccessStatus: 200,
   }
@@ -68,6 +73,7 @@ async function run() {
     const contestsCollection = db.collection('contests')
     const registerCollection = db.collection('register')
     const submitCollection = db.collection('submit')
+    const creatorsCollection = db.collection('bestCreators')
 
         // verify admin middleware
     const verifyAdmin = async (req, res, next) => {
@@ -136,7 +142,18 @@ async function run() {
         res.send(result)
       }
     )
+//  get Best Creators
+app.get('/best-creators',   async (req, res) => {
+  const result = await creatorsCollection.find().toArray()
+  res.send(result)
+})
 
+      //  Contest count
+      app.get('/ContestCount', async (req, res) => {
+        const count = await contestsCollection.countDocuments();
+        console.log(count, "this is count")
+        res.send({ count });
+      })
        // get all users data from db
        app.get('/users', verifyToken, verifyAdmin,  async (req, res) => {
         const result = await usersCollection.find().toArray()
@@ -167,8 +184,13 @@ async function run() {
       })
       // get all contests
       app.get('/all-contests/user', async (req, res)=>{
-        const result = await contestsCollection.find().toArray();
+        const page = parseInt(req.query.page);
+      const size = parseInt(req.query.size);
+        const result = await contestsCollection.find({status:'Confirm',}).skip(page * size)
+        .limit(size)
+        .toArray();
         res.send(result)
+        console.log(result)
       })
       app.get('/detail/contest/:id', verifyToken, async( req, res)=>{
         const id = req.params.id
@@ -244,7 +266,7 @@ async function run() {
             .limit(1)
             .toArray();
 
-        console.log(result, "this is latest winner");
+        // console.log(result, "this is latest winner");
         
         if (result.length > 0) {
             res.send(result[0]);
