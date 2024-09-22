@@ -139,9 +139,14 @@ app.get('/best-creators',   async (req, res) => {
       //  Contest count
       app.get('/ContestCount', async (req, res) => {
         const count = await contestsCollection.countDocuments();
-        console.log(count, "this is count")
+        // console.log(count, "this is count")
         res.send({ count });
       })
+      // app.get('/Count', async (req, res) => {
+      //   const count = await contestsCollection.countDocuments();
+      //   console.log(count, "this is count")
+      //   res.send({ count });
+      // })
        // get all users data from db
        app.get('/users', verifyToken, verifyAdmin,  async (req, res) => {
         const result = await usersCollection.find().toArray()
@@ -248,20 +253,25 @@ app.get('/best-creators',   async (req, res) => {
 
       })
       // get OURE latest winner
-      app.get('/latest-winner', async (req, res)=>{
-        const result = await registerCollection.find()
-            .sort({ 'winerData.winDate': -1 })
-            .limit(1)
-            .toArray();
-
-        // console.log(result, "this is latest winner");
-        
-        if (result.length > 0) {
-            res.send(result[0]);
-        } else {
-            res.status(404).send({ message: 'No winners found' });
+      app.get('/latest-winner', async (req, res) => {
+        try {
+          const result = await registerCollection
+            .find() // Use find() instead of findOne()
+            .sort({ 'winerData.winDate': -1 }) // Sort by winDate in descending order
+            .limit(1) // Limit to 1 result
+            .toArray(); // Convert cursor to an array to fetch the document
+      
+          if (result.length > 0) {
+            res.json(result[0]); // Send the first document from the result array
+          } else {
+            res.status(404).json({ message: 'No winners found' });
+          }
+        } catch (error) {
+          console.error('Error fetching latest winner:', error);
+          res.status(500).json({ message: 'Internal server error' });
         }
-      })
+      });
+      
 
       // get data for leader bord
       app.get('/leaderboard', verifyToken, async (req, res) => {
